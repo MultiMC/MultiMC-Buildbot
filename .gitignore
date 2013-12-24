@@ -1,0 +1,14 @@
+# Python
+*.py[cod]
+
+# Vim
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+*.un~
+Session.vim
+.netrwhist
+*~
+
+# Secrets
+passwords.py
+
