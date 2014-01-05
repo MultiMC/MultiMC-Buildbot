@@ -152,16 +152,16 @@ def bfSetup(osname, arch, channel, deploy=True):
                                      descriptionDone=["fix GoUpdate", "repo permissions"], haltOnFailure=True, 
                                      command=["/bin/bash", "-c", "chmod 0644 %(webdir)s/files/* %(webdir)s/update/*/*/*.json" % {"webdir": webDir}]))
 
-        # Finally, deploy a tarball to the testbuilds folder on the webserver.
+        # Finally, deploy a tarball to the downloads folder on the webserver.
         # TODO: Finish repoman's mkpkg command so we can generate tarballs from GoUpdate versions, rather than having to do this.
         atmpParent = path.abspath(path.join(atmpInstallDir, ".."))
         atmpRel = path.relpath(atmpInstallDir, atmpParent)
 
         if osname == "win": tbdCmd = ["/bin/bash", "-c", 
-                "cd %s && zip -FSr /var/www/files.multimc.org/testbuilds/mmc-%s-%s.zip %s" % (atmpParent, channel, platform, atmpRel)]
-        else: tbdCmd = ["tar", "cvzf", "/var/www/files.multimc.org/testbuilds/mmc-%s-%s.tar.gz" % (channel, platform), "--directory=" + atmpParent, atmpRel]
+                "cd %s && zip -FSr /var/www/files.multimc.org/downloads/mmc-%s-%s.zip %s" % (atmpParent, channel, platform, atmpRel)]
+        else: tbdCmd = ["tar", "cvzf", "/var/www/files.multimc.org/downloads/mmc-%s-%s.tar.gz" % (channel, platform), "--directory=" + atmpParent, atmpRel]
 
-        b.addStep(MasterShellCommand(name="deploy-test", description="deploying to testbuilds", descriptionDone="test build deploy", haltOnFailure=True, command=tbdCmd))
+        b.addStep(MasterShellCommand(name="deploy-download", description="deploying to downloads", descriptionDone="download deploy", haltOnFailure=True, command=tbdCmd))
 
     return b, builder_name
 
