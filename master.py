@@ -27,8 +27,8 @@ BuildmasterConfig = {
     "slaves": slave_list,
     
     "title": "MultiMC",
-    "titleURL": "http://multimc.org",
-    "buildbotURL": "http://ci.multimc.org",
+    "titleURL": "http://multimc.org/",
+    "buildbotURL": "http://ci.multimc.org/",
     "db": { "db_url" : "sqlite:///state.sqlite" }
 }
 
