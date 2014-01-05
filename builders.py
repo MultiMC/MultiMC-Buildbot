@@ -39,7 +39,7 @@ def bfSetup(osname, arch, channel, deploy=True):
     elif channel == "develop":   git_branch = "develop"
     else: raise NotImplemented("Unknown build channel %s" % channel)
 
-    cfgcmd = ["cmake", "-DMultiMC_INSTALL_SHARED_LIBS=ON", "-DCMAKE_BUILD_TYPE=Release"]
+    cfgcmd = ["cmake", "-DMultiMC_INSTALL_SHARED_LIBS=ON", "-DCMAKE_BUILD_TYPE=Release", "-DMultiMC_NOTIFICATION_URL:STRING=http://files.multimc.org/notifications.json"]
     
     make = "make"
 
@@ -115,7 +115,7 @@ def bfSetup(osname, arch, channel, deploy=True):
         inst_clean_cmd = ["rmdir", install_dir, "/s", "/q"]
 
     b.addStep(ShellCommand(name="clean install", description="cleaning install", descriptionDone="clean install",
-              command=inst_clean_cmd, haltOnFailure=True, workdir="build/out"))
+              command=inst_clean_cmd, haltOnFailure=False, flunkOnFailure=False, warnOnFailure=False, workdir="build/out"))
 
     b.addStep(ShellCommand(name="install", env={"VERBOSE": "1"}, description="installing", descriptionDone="install",
           command=[make, "install"], haltOnFailure=True, workdir="build/out"))
