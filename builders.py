@@ -23,10 +23,10 @@ def bfSetup(osname, arch, channel, deploy=True):
     Returns a new MultiMC build factory with the given parameters.
     `osname` is a string indicating the build's operating system. It can be "win", "lin", or "osx", for Windows, Linux, and OS X, respectively.
     `arch` is a string indicating whether the build is 64-bit or not. If so, it should be "64", otherwise, "32".
-    `channel` indicates the build's channel. Usually either `stable` or `develop`, but we may add more channels later.
+    `channel` indicates the build's channel. Usually either `stable`, `develop`, or `rc`, but we may add more channels later.
     """
 
-    # The build type is displayed in the version string and is <channel>-<platform>,
+    # The build type is <channel>-<platform>,
     # while the builder name is the buildbot builder name and is <platform>-<channel>.
     platform = "%s%s" % (osname, arch)
     builder_name = "%s-%s" % (platform, channel)
@@ -37,6 +37,7 @@ def bfSetup(osname, arch, channel, deploy=True):
     git_branch = None
     if channel == "stable":      git_branch = "master"
     elif channel == "develop":   git_branch = "develop"
+    elif channel == "rc":        git_branch = "release-0.1" # TODO: Determine this at runtime. For now we'll hardcode it... :|
     else: raise NotImplemented("Unknown build channel %s" % channel)
 
     cfgcmd = ["cmake", "-DMultiMC_INSTALL_SHARED_LIBS=ON", "-DCMAKE_BUILD_TYPE=Release", "-DMultiMC_NOTIFICATION_URL:STRING=http://files.multimc.org/notifications.json"]
@@ -72,6 +73,12 @@ def bfSetup(osname, arch, channel, deploy=True):
     else:
         raise NotImplemented("Unknown OS name: " + osname)
 
+    # Version type.
+    version_type = "Custom"
+    if channel == "stable": version_type = "Release"
+    elif channel == "develop": version_type = "Development"
+    elif channel == "rc": version_type = "ReleaseCandidate"
+
     # Qt path stuff.
     cfgcmd.append("-DCMAKE_INSTALL_PREFIX:PATH=%s" % install_dir)
     cfgcmd.append(Interpolate("-DCMAKE_PREFIX_PATH=%(prop:QTPATH:-" + defQtPath + ")s"))
@@ -81,7 +88,8 @@ def bfSetup(osname, arch, channel, deploy=True):
     cfgcmd.append("-DMultiMC_CHANLIST_URL=http://files.multimc.org/update/%s/channels.json" % platform)
     cfgcmd.append(Interpolate("-DMultiMC_VERSION_BUILD=%(prop:buildnumber:-0)s"))
     cfgcmd.append("-DMultiMC_VERSION_CHANNEL=%s" % channel)
-    cfgcmd.append("-DMultiMC_VERSION_BUILD_TYPE=%s" % platform)
+    cfgcmd.append("-DMultiMC_VERSION_TYPE=%s" % version_type)
+    cfgcmd.append("-DMultiMC_BUILD_PLATFORM=%s" % platform)
 
     cfgcmd.append("..")
 
@@ -168,7 +176,7 @@ def bfSetup(osname, arch, channel, deploy=True):
 def get_builders():
     builder_names = {}
     builder_list = []
-    for channel in ["stable", "develop"]:
+    for channel in ["stable", "rc", "develop"]:
         for osname in ["lin", "win", "osx"]:
             for arch in ["64", "32"]:
                 if (osname == "win" and arch == "64") or (osname == "osx" and arch == "32"): continue
