@@ -17,11 +17,13 @@ import passwords
 
 def get_slaves():
 	return [
-                DockerLatentBuildSlave("mmc-lin64", passwords.slaves["lin64"], "unix://var/run/docker.sock", "forkk/mmc-deb64-bs:qt51", "sh /run_slave.sh",
-                    env={"BBSLAVE_MASTER_HOST": "ci.multimc.org", "BBSLAVE_MASTER_PORT": "9989", "BBSLAVE_ADMIN": "Forkk <forkk@forkk.net>", "BBSLAVE_PASSWORD": passwords.slaves["lin64"]}),
+                BuildSlave("mmc-lin64", passwords.slaves["lin64"]),
+                #DockerLatentBuildSlave("mmc-lin64", passwords.slaves["lin64"], "unix://var/run/docker.sock", "forkk/mmc-deb64-bs:qt51", "sh /run_slave.sh",
+                #    env={"BBSLAVE_MASTER_HOST": "ci.multimc.org", "BBSLAVE_MASTER_PORT": "9989", "BBSLAVE_ADMIN": "Forkk <forkk@forkk.net>", "BBSLAVE_PASSWORD": passwords.slaves["lin64"]}),
 
-                DockerLatentBuildSlave("mmc-lin32", passwords.slaves["lin32"], "unix://var/run/docker.sock", "forkk/mmc-deb32-bs:qt51", "sh /run_slave.sh",
-                    env={"BBSLAVE_MASTER_HOST": "ci.multimc.org", "BBSLAVE_MASTER_PORT": "9989", "BBSLAVE_ADMIN": "Forkk <forkk@forkk.net>", "BBSLAVE_PASSWORD": passwords.slaves["lin32"]}),
+                BuildSlave("mmc-lin32", passwords.slaves["lin32"]),
+                #DockerLatentBuildSlave("mmc-lin32", passwords.slaves["lin32"], "unix://var/run/docker.sock", "forkk/mmc-deb32-bs:qt51", "sh /run_slave.sh",
+                #    env={"BBSLAVE_MASTER_HOST": "ci.multimc.org", "BBSLAVE_MASTER_PORT": "9989", "BBSLAVE_ADMIN": "Forkk <forkk@forkk.net>", "BBSLAVE_PASSWORD": passwords.slaves["lin32"]}),
 
                 BuildSlave("win32-rootbear", passwords.slaves["win32-rootbear"]),
 
