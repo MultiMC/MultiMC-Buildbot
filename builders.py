@@ -38,6 +38,7 @@ def bfSetup(osname, arch, channel, deploy=True):
     if channel == "stable":      git_branch = "master"
     elif channel == "develop":   git_branch = "develop"
     elif channel == "rc":        git_branch = "release-0.1" # TODO: Determine this at runtime. For now we'll hardcode it... :|
+    elif channel == "quickmod":  git_branch = "feature_quickmod"
     else: raise NotImplemented("Unknown build channel %s" % channel)
 
     cfgcmd = ["cmake", "-DMultiMC_INSTALL_SHARED_LIBS=ON", "-DCMAKE_BUILD_TYPE=Release", "-DMultiMC_NOTIFICATION_URL:STRING=http://files.multimc.org/notifications.json"]
@@ -176,7 +177,7 @@ def bfSetup(osname, arch, channel, deploy=True):
 def get_builders():
     builder_names = {}
     builder_list = []
-    for channel in ["stable", "rc", "develop"]:
+    for channel in ["stable", "rc", "develop", "quickmod"]:
         for osname in ["lin", "win", "osx"]:
             for arch in ["64", "32"]:
                 if (osname == "win" and arch == "64") or (osname == "osx" and arch == "32"): continue
