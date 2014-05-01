@@ -37,7 +37,7 @@ def bfSetup(osname, arch, channel, deploy=True):
     git_branch = None
     if channel == "stable":      git_branch = "master"
     elif channel == "develop":   git_branch = "develop"
-    elif channel == "rc":        git_branch = "release-0.1" # TODO: Determine this at runtime. For now we'll hardcode it... :|
+    elif channel == "rc":        git_branch = "release-0.3.4" # TODO: Determine this at runtime. For now we'll hardcode it... :|
     elif channel == "quickmod":  git_branch = "feature_quickmod"
     else: raise NotImplemented("Unknown build channel %s" % channel)
 
