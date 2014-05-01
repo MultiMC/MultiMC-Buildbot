@@ -54,11 +54,12 @@ def bfSetup(osname, arch, channel, deploy=True):
     elif osname == "win":
         # We don't do Windows 64-bit builds.
         assert arch != "64"
-        defQtPath= "C:/Qt/5.1.1/mingw48_32"
+        qtDir = "C:/Qt/5.2.0/"
+        defQtPath= qtDir + "mingw48_32"
         make = "mingw32-make"
         cfgcmd.append("-G")
         cfgcmd.append("MinGW Makefiles")
-        cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/bin")
+        cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin")
         cfgcmd.append("-DCMAKE_GP_TOOL=dumpbin")
     elif osname == "osx":
         # We don't do OS X 32-bit builds.
