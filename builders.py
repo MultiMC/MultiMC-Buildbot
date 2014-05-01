@@ -50,7 +50,7 @@ def bfSetup(osname, arch, channel, deploy=True):
     gourepo = builder_name
 
     if osname == "lin":
-        defQtPath = "/usr/local/Qt-5.1.1"
+        defQtPath = "/usr/local/Qt-5.2"
     elif osname == "win":
         # We don't do Windows 64-bit builds.
         assert arch != "64"
