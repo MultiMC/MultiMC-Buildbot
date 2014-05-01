@@ -29,6 +29,8 @@ def get_slaves():
 
                 BuildSlave("forkk-buildbox-win32", passwords.slaves["win32-forkk-buildbox"]),
 
+                BuildSlave("win32-ec2", passwords.slaves["win32-ec2"]),
+
                 SSHLatentBuildSlave("mmc-osx64", passwords.slaves["osx64"], "l060.macincloud.com", "user3555", os.path.expanduser("~/.ssh/id_rsa")),
                 ]
 
