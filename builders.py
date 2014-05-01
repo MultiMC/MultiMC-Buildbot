@@ -185,7 +185,7 @@ def get_builders():
                 if not channel in builder_names:  builder_names[channel] = [builder_name]
                 else:                             builder_names[channel].append(builder_name)
                 slaves = ["mmc-%s%s" % (osname, arch)]
-                if osname == "win": slaves = ["win32-rootbear"]
+                if osname == "win": slaves = ["win32-ec2"]
                 builder_list.append(BuilderConfig(name=builder_name, slavenames=slaves, factory=factory))
     return builder_list, builder_names
 
