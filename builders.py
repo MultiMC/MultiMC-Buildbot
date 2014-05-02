@@ -57,7 +57,7 @@ def bfSetup(osname, arch, channel, deploy=True):
         qtDir = "C:/Qt/5.2.0/"
         defQtPath= qtDir + "mingw48_32"
         make = "mingw32-make"
-        zlibDir = qtDir + "mingw48_32/include/QtZlib"
+        cfgcmd.append("-DZLIB_INCLUDE_DIRS=%s" % qtDir + "mingw48_32/include/QtZlib")
         cfgcmd.append("-G")
         cfgcmd.append("MinGW Makefiles")
         cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin")
@@ -84,7 +84,6 @@ def bfSetup(osname, arch, channel, deploy=True):
 
     # Qt path stuff.
     cfgcmd.append("-DCMAKE_INSTALL_PREFIX:PATH=%s" % install_dir)
-    cfgcmd.append("-DZLIB_INCLUDE_DIRS=%s" % zlibDir)
     cfgcmd.append(Interpolate("-DCMAKE_PREFIX_PATH=%(prop:QTPATH:-" + defQtPath + ")s"))
     cfgcmd.append(Interpolate("-DQt5_DIR=%(prop:QTPATH:-" + defQtPath + ")s"))
 
