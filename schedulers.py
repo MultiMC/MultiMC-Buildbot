@@ -20,11 +20,11 @@ def get_schedulers(builder_names):
         builderNames=[name for key, blist in builder_names.iteritems() for name in blist]))
 
     if buildOnCommit:
-        schedulers.append(SingleBranchScheduler(
-            name="stable",
-            change_filter=filter.ChangeFilter(branch='master'),
-            treeStableTimer=30,
-            builderNames=builder_names["stable"]))
+#        schedulers.append(SingleBranchScheduler(
+#            name="stable",
+#            change_filter=filter.ChangeFilter(branch='master'),
+#            treeStableTimer=30,
+#            builderNames=builder_names["stable"]))
 
         schedulers.append(SingleBranchScheduler(
             name="develop",
@@ -37,6 +37,12 @@ def get_schedulers(builder_names):
             change_filter=filter.ChangeFilter(branch_fn=rc_branch_filter),
             treeStableTimer=30,
             builderNames=builder_names["rc"]))
+
+        schedulers.append(SingleBranchScheduler(
+            name="quickmod",
+            change_filter=filter.ChangeFilter(branch='feature_quickmod'),
+            treeStableTimer=30,
+            builderNames=builder_names["quickmod"]))
 
         return schedulers
 
