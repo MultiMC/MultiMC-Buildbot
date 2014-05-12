@@ -18,7 +18,7 @@ import os
 from os import path
 
 # This stuff is all similar, so we'll use a common function for it.
-def bfSetup(osname, arch, channel, deploy=True):
+def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
     """
     Returns a new MultiMC build factory with the given parameters.
     `osname` is a string indicating the build's operating system. It can be "win", "lin", or "osx", for Windows, Linux, and OS X, respectively.
@@ -54,13 +54,21 @@ def bfSetup(osname, arch, channel, deploy=True):
     elif osname == "win":
         # We don't do Windows 64-bit builds.
         assert arch != "64"
-        qtDir = "C:/Qt/5.1.1/"
+
+        # Slave specific stuff
+        # TODO: Move this info into environment variables on the slaves.
+        if (slaves == ["win32-rootbear"]):
+            qtDir = "C:/Qt/5.1.1/"
+            cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/bin")
+        if (slaves == ["win32-ec2"]):
+            qtDir = "C:/Qt/5.2.0/"
+            cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin")
+
         defQtPath= qtDir + "mingw48_32"
         make = "mingw32-make"
         cfgcmd.append("-DZLIB_INCLUDE_DIRS=%s" % qtDir + "mingw48_32/include/QtZlib")
         cfgcmd.append("-G")
         cfgcmd.append("MinGW Makefiles")
-        cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin")
         cfgcmd.append("-DCMAKE_GP_TOOL=dumpbin")
     elif osname == "osx":
         # We don't do OS X 32-bit builds.
@@ -182,12 +190,16 @@ def get_builders():
     for channel in ["stable", "rc", "develop", "quickmod"]:
         for osname in ["lin", "win", "osx"]:
             for arch in ["64", "32"]:
-                if (osname == "win" and arch == "64") or (osname == "osx" and arch == "32"): continue
-                factory, builder_name = bfSetup(osname=osname, arch=arch, channel=channel)
-                if not channel in builder_names:  builder_names[channel] = [builder_name]
-                else:                             builder_names[channel].append(builder_name)
+                if (osname == "win" and arch == "64") or (osname == "osx" and arch == "32"):
+                    continue
+
                 slaves = ["mmc-%s%s" % (osname, arch)]
                 if osname == "win": slaves = ["win32-rootbear"] # NOTE: win32-rootbear has Qt 5.1.1, while EC2 has 5.2.0
+
+                factory, builder_name = bfSetup(osname=osname, arch=arch, channel=channel, slaves=slaves)
+
+                if not channel in builder_names:  builder_names[channel] = [builder_name]
+                else:                             builder_names[channel].append(builder_name)
                 builder_list.append(BuilderConfig(name=builder_name, slavenames=slaves, factory=factory))
     return builder_list, builder_names
 
