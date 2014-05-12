@@ -54,7 +54,7 @@ def bfSetup(osname, arch, channel, deploy=True):
     elif osname == "win":
         # We don't do Windows 64-bit builds.
         assert arch != "64"
-        qtDir = "C:/Qt/5.2.0/"
+        qtDir = "C:/Qt/5.1.1/"
         defQtPath= qtDir + "mingw48_32"
         make = "mingw32-make"
         cfgcmd.append("-DZLIB_INCLUDE_DIRS=%s" % qtDir + "mingw48_32/include/QtZlib")
@@ -187,7 +187,7 @@ def get_builders():
                 if not channel in builder_names:  builder_names[channel] = [builder_name]
                 else:                             builder_names[channel].append(builder_name)
                 slaves = ["mmc-%s%s" % (osname, arch)]
-                if osname == "win": slaves = ["win32-rootbear"]
+                if osname == "win": slaves = ["win32-rootbear"] # NOTE: win32-rootbear has Qt 5.1.1, while EC2 has 5.2.0
                 builder_list.append(BuilderConfig(name=builder_name, slavenames=slaves, factory=factory))
     return builder_list, builder_names
 
