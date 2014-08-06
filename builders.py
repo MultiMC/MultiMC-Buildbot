@@ -13,12 +13,14 @@ from buildbot.steps.transfer import DirectoryUpload
 from buildbot.config import BuilderConfig
 from buildbot.process.properties import Property, Interpolate
 
+from slaves import slaveParams
+
 import re
 import os
 from os import path
 
 # This stuff is all similar, so we'll use a common function for it.
-def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
+def bfSetup(osname, arch, channel, slave, deploy=True): # TODO: Allow multiple slaves per builder.
     """
     Returns a new MultiMC build factory with the given parameters.
     `osname` is a string indicating the build's operating system. It can be "win", "lin", or "osx", for Windows, Linux, and OS X, respectively.
@@ -31,67 +33,38 @@ def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
     platform = "%s%s" % (osname, arch)
     builder_name = "%s-%s" % (platform, channel)
 
-    defQtPath= "/usr/local/Qt-5.1.1"
-    artifactTemp = "/tmp/mmcb"
+    # Figure out where to put artifacts.
+    artifactTemp = "/tmp/mmc-%s-artifacts" % platform
 
+    # Determine the update repo name.
+    gourepo = builder_name
+
+    # Make sure we're on a valid channel.
     git_branch = None
     if channel == "stable":      git_branch = "master"
     elif channel == "develop":   git_branch = "develop"
-    elif channel == "rc":        git_branch = "release-0.3.4" # TODO: Determine this at runtime. For now we'll hardcode it... :|
     elif channel == "quickmod":  git_branch = "feature_quickmod"
     else: raise NotImplemented("Unknown build channel %s" % channel)
 
-    cfgcmd = ["cmake", "-DMultiMC_INSTALL_SHARED_LIBS=ON", "-DCMAKE_BUILD_TYPE=Release", "-DMultiMC_NOTIFICATION_URL:STRING=http://files.multimc.org/notifications.json"]
-    
-    make = "make"
+    # Get slave parameters.
+    p = slaveParams[slave]
 
-    artifactTemp = "/tmp/mmc-%s-artifacts" % platform
-    install_dir = "install"
-    gourepo = builder_name
+    cfgcmd = [p["cmakeCmd"], "-DMultiMC_INSTALL_SHARED_LIBS=ON", "-DCMAKE_BUILD_TYPE=Release", "-DMultiMC_NOTIFICATION_URL:STRING=http://files.multimc.org/notifications.json"]
 
-    if osname == "lin":
-        defQtPath = "/usr/local/Qt-5.2.0"
-    elif osname == "win":
-        # We don't do Windows 64-bit builds.
-        assert arch != "64"
+    make = p["makeCmd"]
+    defQtPath= p["qtPath"]
+    installDir = p["installDir"]
 
-        # Slave specific stuff
-        # TODO: Move this info into environment variables on the slaves.
-        if (slaves == ["win32-rootbear"]):
-            qtDir = "C:/Qt/5.1.1/"
-            cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/bin")
-        if (slaves == ["win32-ec2"]):
-            qtDir = "C:/Qt/5.2.0/"
-            cfgcmd.append("-DCMAKE_GP_CMD_PATHS=C:/Program Files (x86)/Microsoft Visual Studio 11.0/VC/bin")
+    cfgcmd += p["cmakeArgs"]
 
-        defQtPath= qtDir + "mingw48_32"
-        make = "mingw32-make"
-        cfgcmd.append("-DZLIB_INCLUDE_DIRS=%s" % qtDir + "mingw48_32/include/QtZlib")
-        cfgcmd.append("-G")
-        cfgcmd.append("MinGW Makefiles")
-        cfgcmd.append("-DCMAKE_GP_TOOL=dumpbin")
-    elif osname == "osx":
-        # We don't do OS X 32-bit builds.
-        assert arch != "32"
-        defQtPath = "/Users/user3555/Qt5.1.1/5.1.1/clang_64"
-        # Change the path to the CMake binary.
-        cfgcmd[0] = "/Users/user3555/cmake.app/Contents/bin/cmake"
-        cfgcmd.append("-DCMAKE_CXX_FLAGS=-std=gnu++0x -stdlib=libc++")
-        #cfgcmd.append("-DCMAKE_C_FLAGS=-std=gnu++0x -stdlib=libc++")
-        cfgcmd.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=10.7")
-        cfgcmd.append("-DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/")
-        install_dir = "/Users/user3555/bbslave/%s/install" % builder_name
-    else:
-        raise NotImplemented("Unknown OS name: " + osname)
 
     # Version type.
-    version_type = "Custom"
-    if channel == "stable": version_type = "Release"
-    elif channel == "develop": version_type = "Development"
-    elif channel == "rc": version_type = "ReleaseCandidate"
+    versionType = "Custom"
+    if channel == "stable": versionType = "Release"
+    elif channel == "develop": versionType = "Development"
 
     # Qt path stuff.
-    cfgcmd.append("-DCMAKE_INSTALL_PREFIX:PATH=%s" % install_dir)
+    cfgcmd.append("-DCMAKE_INSTALL_PREFIX:PATH=%s" % installDir)
     cfgcmd.append(Interpolate("-DCMAKE_PREFIX_PATH=%(prop:QTPATH:-" + defQtPath + ")s"))
     cfgcmd.append(Interpolate("-DQt5_DIR=%(prop:QTPATH:-" + defQtPath + ")s"))
 
@@ -99,7 +72,7 @@ def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
     cfgcmd.append("-DMultiMC_CHANLIST_URL=http://files.multimc.org/update/%s/channels.json" % platform)
     cfgcmd.append(Interpolate("-DMultiMC_VERSION_BUILD=%(prop:buildnumber:-0)s"))
     cfgcmd.append("-DMultiMC_VERSION_CHANNEL=%s" % channel)
-    cfgcmd.append("-DMultiMC_VERSION_TYPE=%s" % version_type)
+    cfgcmd.append("-DMultiMC_VERSION_TYPE=%s" % versionType)
     cfgcmd.append("-DMultiMC_BUILD_PLATFORM=%s" % platform)
 
     cfgcmd.append("..")
@@ -129,9 +102,9 @@ def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
         b.addStep(Compile(workdir="build/out", command=[make, "test", Interpolate("-j%(prop:MAKEJOBS:-2)s")],
                   name="tests", description=["testing"], descriptionDone=["tests"], logfiles={"testlog": "Testing/Temporary/LastTest.log"}))
 
-    inst_clean_cmd = ["rm", "-rf", install_dir]
+    inst_clean_cmd = ["rm", "-rf", installDir]
     if osname == "win":
-        inst_clean_cmd = ["rmdir", install_dir, "/s", "/q"]
+        inst_clean_cmd = ["rmdir", installDir, "/s", "/q"]
 
     b.addStep(ShellCommand(name="clean install", description="cleaning install", descriptionDone="clean install",
               command=inst_clean_cmd, haltOnFailure=False, flunkOnFailure=False, warnOnFailure=False, workdir="build/out"))
@@ -141,7 +114,7 @@ def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
 
     if osname == "win":
         # Install OpenSSL libs on Windows.
-        b.addStep(ShellCommand(name="add-openssl", command=["copy", "C:\\OpenSSL-Win32\\*.dll", install_dir], 
+        b.addStep(ShellCommand(name="add-openssl", command=["copy", "C:\\OpenSSL-Win32\\*.dll", installDir], 
                   description="adding openssl", workdir="build/out", descriptionDone="add openssl", haltOnFailure=True))
 
 
@@ -157,7 +130,8 @@ def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
         atmpInstallDir = os.path.join(artifactTemp, "MultiMC")
 
         # Upload artifacts to the main server.
-        b.addStep(DirectoryUpload(name="artifact-dl", slavesrc=install_dir if install_dir.startswith("/") else ("out/" + install_dir), masterdest=atmpInstallDir))
+        artifactsPath = installDir if p["absInstallDir"] else ("out/" + installDir)
+        b.addStep(DirectoryUpload(name="artifact-dl", slavesrc=artifactsPath, masterdest=atmpInstallDir))
 
         # Deploy the uploaded artifacts to GoUpdate.
         webDir = "/var/www/files.multimc.org"
@@ -187,19 +161,18 @@ def bfSetup(osname, arch, channel, deploy=True, slaves=[]):
 def get_builders():
     builder_names = {}
     builder_list = []
-    for channel in ["stable", "rc", "develop", "quickmod"]:
+    for channel in ["stable", "develop", "quickmod"]:
         for osname in ["lin", "win", "osx"]:
             for arch in ["64", "32"]:
                 if (osname == "win" and arch == "64") or (osname == "osx" and arch == "32"):
                     continue
 
-                slaves = ["mmc-%s%s" % (osname, arch)]
-                if osname == "win": slaves = ["win32-rootbear"] # NOTE: win32-rootbear has Qt 5.1.1, while EC2 has 5.2.0
+                slave = "mmc-%s%s" % (osname, arch)
 
-                factory, builder_name = bfSetup(osname=osname, arch=arch, channel=channel, slaves=slaves)
+                factory, builder_name = bfSetup(osname=osname, arch=arch, channel=channel, slave=slave)
 
                 if not channel in builder_names:  builder_names[channel] = [builder_name]
                 else:                             builder_names[channel].append(builder_name)
-                builder_list.append(BuilderConfig(name=builder_name, slavenames=slaves, factory=factory))
+                builder_list.append(BuilderConfig(name=builder_name, slavenames=[slave], factory=factory))
     return builder_list, builder_names
 

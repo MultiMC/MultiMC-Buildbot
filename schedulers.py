@@ -32,11 +32,11 @@ def get_schedulers(builder_names):
             treeStableTimer=30,
             builderNames=builder_names["develop"]))
 
-        schedulers.append(AnyBranchScheduler(
-            name="release-candidate",
-            change_filter=filter.ChangeFilter(branch_fn=rc_branch_filter),
-            treeStableTimer=30,
-            builderNames=builder_names["rc"]))
+        # schedulers.append(AnyBranchScheduler(
+        #     name="release-candidate",
+        #     change_filter=filter.ChangeFilter(branch_fn=rc_branch_filter),
+        #     treeStableTimer=30,
+        #     builderNames=builder_names["rc"]))
 
         schedulers.append(SingleBranchScheduler(
             name="quickmod",
