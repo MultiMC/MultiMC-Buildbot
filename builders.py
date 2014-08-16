@@ -41,7 +41,7 @@ def bfSetup(osname, arch, channel, slave, deploy=True): # TODO: Allow multiple s
 
     # Make sure we're on a valid channel.
     git_branch = None
-    if channel == "stable":      git_branch = "master"
+    if channel == "stable":      git_branch = "stable"
     elif channel == "develop":   git_branch = "develop"
     elif channel == "quickmod":  git_branch = "feature_quickmod"
     else: raise NotImplemented("Unknown build channel %s" % channel)
@@ -53,7 +53,7 @@ def bfSetup(osname, arch, channel, slave, deploy=True): # TODO: Allow multiple s
 
     make = p["makeCmd"]
     defQtPath= p["qtPath"]
-    installDir = p["installDir"]
+    installDir = p["installDir"].format(buildername = builder_name)
 
     cfgcmd += p["cmakeArgs"]
 

@@ -94,7 +94,7 @@ def mkMacParams():
     # CMake path
     p["cmakeCmd"] = "/Users/user3555/cmake.app/Contents/bin/cmake"
     # Absolute path for installing.
-    p["installDir"] = Interpolate("/Users/user3555/bbslave/%(prop:buildername)s/install")
+    p["installDir"] = "/Users/user3555/bbslave/{buildername}/install"
     p["absInstallDir"] = True
     
     # Crazy compiler flags.
