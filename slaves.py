@@ -36,6 +36,8 @@ def get_slaves():
         BuildSlave("mmc-win32", passwords.slaves["win32"]),
 
         SSHLatentBuildSlave("mmc-osx64", passwords.slaves["osx64"], "l060.macincloud.com", "user3555", os.path.expanduser("~/.ssh/id_rsa")),
+
+        BuildSlave("mmc-generic", passwords.slaves["generic"]),
     ]
 
 slaveParams = {}
@@ -62,7 +64,7 @@ defSlaveParams = {
 
 def mkLinuxParams():
     p = copy.deepcopy(defSlaveParams)
-    p["qtPath"] = "/usr/local/Qt-5.2.0"
+    p["qtPath"] = "/usr/local/Qt-5.3.2"
     
     return p
 
@@ -90,7 +92,7 @@ def mkWinParams():
 
 def mkMacParams():
     p = copy.deepcopy(defSlaveParams)
-    p["qtPath"] = "/Users/user3555/Qt5.1.1/5.1.1/clang_64"
+    p["qtPath"] = "/Users/user3555/Qt/5.3/clang_64"
     # CMake path
     p["cmakeCmd"] = "/Users/user3555/cmake.app/Contents/bin/cmake"
     # Absolute path for installing.
@@ -102,7 +104,7 @@ def mkMacParams():
     cmakeArgs.append("-DCMAKE_CXX_FLAGS=-std=gnu++0x -stdlib=libc++")
     #cfgcmd.append("-DCMAKE_C_FLAGS=-std=gnu++0x -stdlib=libc++")
     cmakeArgs.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=10.7")
-    cmakeArgs.append("-DCMAKE_OSX_SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/")
+    cmakeArgs.append("-DCMAKE_OSX_SYSROOT=/Applications/Xcode5.1.1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/")
 
     return p
    

@@ -6,7 +6,7 @@
 
 from buildbot.process.factory import BuildFactory
 from buildbot.steps.source.git import Git
-from buildbot.steps.shell import ShellCommand, SetProperty, Configure, Compile
+from buildbot.steps.shell import ShellCommand, SetPropertyFromCommand, Configure, Compile
 from buildbot.steps.master import MasterShellCommand
 from buildbot.steps.slave import SetPropertiesFromEnv
 from buildbot.steps.transfer import DirectoryUpload
@@ -90,7 +90,7 @@ def bfSetup(osname, arch, channel, slave, deploy=True): # TODO: Allow multiple s
         vregex = r'Version: ([0-9.]*[0-9]+)'
         return { "buildversion": re.search(vregex, stdout).group(1) }
 
-    b.addStep(SetProperty(name="check-version", description="checking version", descriptionDone="version check",
+    b.addStep(SetPropertyFromCommand(name="check-version", description="checking version", descriptionDone="version check",
               command=[make, "version"], extract_fn=getVersion, workdir="build/out"))
 
     #, ("updater", "updater")
@@ -114,7 +114,7 @@ def bfSetup(osname, arch, channel, slave, deploy=True): # TODO: Allow multiple s
 
     if osname == "win":
         # Install OpenSSL libs on Windows.
-        b.addStep(ShellCommand(name="add-openssl", command=["copy", "C:\\OpenSSL-Win32\\*.dll", installDir], 
+        b.addStep(ShellCommand(name="add-openssl", command=["copy", "C:\\OpenSSL-Win32\\*.dll", installDir],
                   description="adding openssl", workdir="build/out", descriptionDone="add openssl", haltOnFailure=True))
 
 
@@ -135,14 +135,14 @@ def bfSetup(osname, arch, channel, slave, deploy=True): # TODO: Allow multiple s
 
         # Deploy the uploaded artifacts to GoUpdate.
         webDir = "/var/www/files.multimc.org"
-        b.addStep(MasterShellCommand(name="deploy-version", description="deploying to GoUpdate repo", descriptionDone="GoUpdate deploy", haltOnFailure=True, 
-                command=["repoman", "update", 
-                            webDir + "/update/%s/%s/" % (platform, channel), 
-                            webDir + "/files/", "http://files.multimc.org/files/", 
+        b.addStep(MasterShellCommand(name="deploy-version", description="deploying to GoUpdate repo", descriptionDone="GoUpdate deploy", haltOnFailure=True,
+                command=["repoman", "update",
+                            webDir + "/update/%s/%s/" % (platform, channel),
+                            webDir + "/files/", "http://files.multimc.org/files/",
                             atmpInstallDir, Interpolate("%(prop:buildversion)s"), Interpolate("%(prop:buildnumber)s")]))
 
         b.addStep(MasterShellCommand(name="chmod-repo", description=["fixing GoUpdate", "repo permissions"],
-                                     descriptionDone=["fix GoUpdate", "repo permissions"], haltOnFailure=True, 
+                                     descriptionDone=["fix GoUpdate", "repo permissions"], haltOnFailure=True,
                                      command=["/bin/bash", "-c", "chmod 0644 %(webdir)s/files/* %(webdir)s/update/*/*/*.json" % {"webdir": webDir}]))
 
         # Finally, deploy a tarball to the downloads folder on the webserver.
@@ -150,13 +150,16 @@ def bfSetup(osname, arch, channel, slave, deploy=True): # TODO: Allow multiple s
         atmpParent = path.abspath(path.join(atmpInstallDir, ".."))
         atmpRel = path.relpath(atmpInstallDir, atmpParent)
 
-        if osname == "win": tbdCmd = ["/bin/bash", "-c", 
+        if osname == "win": tbdCmd = ["/bin/bash", "-c",
                 "cd %s && zip -FSr /var/www/files.multimc.org/downloads/mmc-%s-%s.zip %s" % (atmpParent, channel, platform, atmpRel)]
         else: tbdCmd = ["tar", "cvzf", "/var/www/files.multimc.org/downloads/mmc-%s-%s.tar.gz" % (channel, platform), "--directory=" + atmpParent, atmpRel]
 
         b.addStep(MasterShellCommand(name="deploy-download", description="deploying to downloads", descriptionDone="download deploy", haltOnFailure=True, command=tbdCmd))
 
     return b, builder_name
+
+
+from translation_builders import transUpdateBuilder, transReleaseBuilder
 
 def get_builders():
     builder_names = {}
@@ -174,5 +177,10 @@ def get_builders():
                 if not channel in builder_names:  builder_names[channel] = [builder_name]
                 else:                             builder_names[channel].append(builder_name)
                 builder_list.append(BuilderConfig(name=builder_name, slavenames=[slave], factory=factory))
+    # Add translation builders.
+    builder_list.append(BuilderConfig(name="translations-build",
+        slavenames=["mmc-generic"], factory=transReleaseBuilder))
+    builder_list.append(BuilderConfig(name="translations-update",
+        slavenames=["mmc-generic"], factory=transUpdateBuilder))
     return builder_list, builder_names
 
